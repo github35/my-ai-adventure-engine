@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{% if title %}{{title}}{% endif %}</title>
+		<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<!-- user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width,height=device-height -->
+		<link href="/static/resources/bootstrap.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="/static/resources/bootstrap-icons.css" />
+		<link href="/static/style/demo.css?1" rel="stylesheet" />
+		<script src="/static/resources/bootstrap.bundle.min.js" type="text/javascript"></script>
+		<script src="/static/resources/jquery.min.js" type="text/javascript"></script>
+		<script src="/static/resources/t.min.js" type="text/javascript"></script>
+        <script src="/static/resources/p5.min.js" type="text/javascript"></script>
+		<script src="/static/resources/html2canvas.min.js" type="text/javascript"></script>
+	</head>
+
+
+	<body>
+		<div id="my_canvas" style="position: fixed;"></div>
+		<!-- <p id="temp_text" style="position: absolute;"></p> -->
+		<div class="container" id="my_container">
+			<div class="d-flex row justify-content-end">
+				<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8 col-xl-8" id="content_box">
+					<!-- placeholder -->
+					<div class="row justify-content-around" id="placeholder"></div>
+					<!-- opening -->
+					<div class="row justify-content-around" id="opening_box" style="display: none">
+						<div class="col-11 full_screen">
+							<div id="opening"></div>
+						</div>
+					</div>
+					<!-- steps -->
+					{% for i in range(n_steps) %}
+					<div class="row justify-content-around" id="step{{i}}_box" style="display: none">
+						<div class="col-11 full_screen">
+							<div id="step{{i}}_intro"></div>
+							<div id="step{{i}}_interaction_input_bg"></div>
+							<div id="step{{i}}_interaction_input_box"></div>
+							<div class="smaller" id="step{{i}}_interaction_input_hint"></div>
+							<div id="step{{i}}_interaction_input_result">
+								<div id="step{{i}}_interaction_input_reply"></div>
+							</div>
+							<div id="step{{i}}_outro"></div>
+						</div>
+					</div>
+					{% endfor %}
+					<!-- ending -->
+					<div class="row justify-content-around" id="ending_box" style="display: none">
+						<div class="col-11 full_screen">
+							<div id="ending"></div>
+						</div>
+					</div>
+					<!-- download -->
+					<div class="row justify-content-around" id="download_box" style="display: none">
+						<div class="col-11 full_screen">
+							<div id="download"></div>
+						</div>
+					</div>
+					<!-- bottom -->
+					<div class="row justify-content-around other_info">
+						<div class="col-11">
+							<!-- beian -->
+							<a href=""></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div style="display: none">
+			<p id="current_id"></p>
+			<p id="current_state"></p>
+			<p id="current_nothing"></p>
+		</div>
+
+		<script src="/static/p5/my_rug.js?v=17" type="text/javascript"></script>
+		<script type="text/javascript">
+			$("#content_box").css("height", ($(window).height()).toString() + "px");
+		</script>
+		<script type="text/javascript">
+			function format_input(id) {
+				let temp_height = $("#" + id + "_hidden").height();
+				while (temp_height == $("#" + id + "_hidden").height()) {
+					$("#" + id + "_hidden").append("啊");
+				}
+				$("#" + id + "_underline").html($("#" + id + "_hidden").html().substring(0, $("#" + id + "_hidden").html().length - 1));
+			}
+			function count_input(i, l) {
+				$("#" + $(i).attr('id') + "_limit").text(
+					" (" + String($(i).text().length) + "/" + String(l) + ") "
+				);
+				// enter to submit
+				$(i).on('keydown', function(event) {
+					if (event.keyCode === 13) {
+						event.preventDefault(); 
+						// $("#" + $(i).attr('id')).blur();
+						// $("#" + $(i).attr('id') + "_submit").click();
+					}
+				});
+			}
+			function cut_input(i, l) {
+				$(i).text($(i).text().slice(0, l));
+			}
+			function download(i) {
+				$("html, body").scrollTop(0);
+				// setTimeout(() => {
+				// 	$("html, body").scrollTop(0);
+				// 	$(i).parent().find("button").hide();
+				// }, 100);
+				setTimeout(() => { 
+					html2canvas(document.body, {
+					allowTaint: true,
+					backgroundColor: "rgb(255, 255, 255)",
+					})
+					.then(canvas => {
+						canvas.style.display = 'none';
+						document.body.appendChild(canvas);
+						return canvas;
+					})
+					.then(canvas => {
+						var image = canvas.toDataURL('image/png');
+						const a = document.createElement('a');
+						a.setAttribute('download', 'my-image.png');
+						a.setAttribute('href', image);
+						a.click();
+						canvas.remove();
+					})
+				}, 1000);
+			}
+		</script>
+		<script type="text/javascript">
+			function go_next() {
+				// $("#text").remove();
+				$.ajax({
+					url: "/walk/demo",
+					type: "POST",
+					dataType: "json",
+					data: {},
+					success: function (data) {
+						$.each(data, function (key, val) {
+							if (key == "type") {
+								t = String(val);
+							}
+							if (key == "id") {
+								id = String(val);
+							}
+							if (key == "text") {
+								text = String(val);
+							}
+						});
+						if (id == String($("#current_id").val())) {
+							if (t != "t") {
+								go_next();
+							}
+							else {
+								$("#" + id).q(text, {
+									speed: 0,
+									speed_vary: false,
+									delay: false,
+									mistype: false,
+									caret: false,
+									blink: false,
+									blink_perm: false,
+									tag: "span",
+									pause_on_click: false,
+									repeat: false,
+									init: function (elem) {},
+									typing: function (elem, chars_total, chars_left, char) {
+										$("html, body").scrollTop($(elem[0]).offset().top);
+										$(elem[0]).scrollTop(elem[0].scrollHeight);
+									},
+									fin: function (elem) {
+										go_next();
+									},
+								});
+							}
+						} else {
+							// close previous element
+							prev_id = String($("#current_id").val());
+							if (prev_id.length > 0) {
+								// console.log("#" + prev_id);
+								$("#" + prev_id).t_off();
+							}
+							$("#current_id").val(id);
+							// show parent box
+							id_prefix_index = id.indexOf("_");
+							let temp_id;
+							if (id_prefix_index >= 0) {
+								temp_id = id.slice(0, id_prefix_index);
+							} else {
+								temp_id = id;
+							}
+							$("#" + temp_id + "_box").show();
+							if (temp_id == "ending") {
+								$("#current_state").val("E");
+							}
+							// underline formatting
+							if ($("#current_id").val().includes("hint")) {
+								format_input($("#current_id").val().replace("_hint", ""));
+								$("#" + $("#current_id").val().replace("_hint", "")).css("height", ($("#" + $("#current_id").val().replace("hint", "underline")).height()).toString() + "px");
+								$("#" + $("#current_id").val().replace("hint", "box")).contents()[1].remove();
+							}
+							if (t != "t") {
+								// console.log("#" + id, $("#" + id));
+								text = text.replace("ppxx", ($("#" + id).width().toString())).replace("ppxx", ($("#" + id).width().toString()));
+								$("#" + id).append(text);
+								go_next();
+							}
+							else {
+								$("#" + id).t(text, {
+									speed: 0,
+									speed_vary: false,
+									delay: false,
+									mistype: false,
+									caret: false,
+									blink: false,
+									blink_perm: false,
+									tag: "span",
+									pause_on_click: false,
+									repeat: false,
+									init: function (elem) {},
+									typing: function (elem, chars_total, chars_left, char) {
+										$("html, body").scrollTop($(elem[0]).offset().top);
+										$(elem[0]).scrollTop(elem[0].scrollHeight);
+									},
+									fin: function (elem) {
+										if ($("#current_id").val().includes("hint")) {
+											$("#" + $("#current_id").val()).t_off();
+											$("#" + $("#current_id").val().replace("_hint", "")).attr('contenteditable', 'true');
+											$("#" + $("#current_id").val().replace("_hint", "")).focus();
+										}
+										go_next();
+									}
+								});
+							}
+						}
+					},
+					error: function (e) {
+					},
+				});
+			}
+			window.onload = function () {
+				go_next();
+			};
+		</script>
+
+		<script type="text/javascript">
+			function run() {
+				input_id = $("#current_id").val().replace("_hint", "");
+				reply_id = $("#current_id").val().replace("hint", "reply");
+				submit_id = $("#current_id").val().replace("hint", "submit");
+				underline_id = $("#current_id").val().replace("hint", "underline");
+				// formatting
+				$("#" + $("#current_id").val()).hide();
+				$("#" + underline_id).text($("#" + input_id).text());
+				$("#" + input_id).attr('contenteditable', 'false');
+				$("#" + submit_id).hide();
+				$("#current_id").val(reply_id);
+				$("#" + reply_id).t("Loading...", {
+					speed: 50,
+					speed_vary: false,
+					delay: false,
+					mistype: false,
+					caret: false,
+					blink: false,
+					blink_perm: false,
+					tag: "span",
+					pause_on_click: false,
+					repeat: true,
+					init: function (elem) {$("#current_state").val("L");},
+					typing: function (elem, chars_total, chars_left, char) {
+						$("html, body").scrollTop($(elem[0]).offset().top);
+						$(elem[0]).scrollTop(elem[0].scrollHeight);
+					},
+					fin: function (elem) {},
+				});
+				
+				$("#" + submit_id).hide();
+				$.ajax({
+					url: "/run/demo",
+					type: "POST",
+					dataType: "json",
+					data: { input: $("#" + input_id).text() },
+					success: function (data) {
+						$("#" + reply_id).t_off();
+						$("#" + reply_id).t(data, {
+							speed: 0,
+							speed_vary: false,
+							delay: false,
+							mistype: false,
+							caret: false,
+							blink: false,
+							blink_perm: false,
+							tag: "span",
+							pause_on_click: false,
+							repeat: false,
+							init: function (elem) {
+								$("#current_state").val("");
+							},
+							typing: function (elem, chars_total, chars_left, char) {
+								$("html, body").scrollTop($(elem[0]).offset().top);
+								$(elem[0]).scrollTop(elem[0].scrollHeight);
+							},
+							fin: function (elem) {
+								go_next();
+							},
+						});
+					},
+					error: function (e) {
+						alert("error");
+					},
+				});
+			}
+		</script>
+	</body>
+</html>

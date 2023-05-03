@@ -1,0 +1,97 @@
+{
+    "opening": [
+        {
+            "display":"我慢慢清醒过来，发现自己躺在一个陌生的房间地板上，光线很暗。我完全没有任何如何来到这个房间的记忆。\n哈？怎么回事？\n"
+        },
+        {
+            "display":"这个时候，我的脑海里响起了一个声音：剩余回合数，3。\n"
+        }
+    ],
+    "steps": [
+        {
+            "intro": [
+                {
+                    "display":"我决定"
+                }
+            ],
+            "interaction": {
+                "max_input":"25",
+                "hint":"请输入25字内任意行动",
+                "prompt":"{{all}}{{input}}。",
+                "suffix": "不知道是不是错觉，光线似乎亮了一些。",
+                "model":"text-davinci-003",
+                "temperature":0.9,
+                "max_tokens":128,
+                "display":"{{reply}}不知道是不是错觉，光线似乎亮了一些。"
+            },
+            "outro": [
+                {
+                    "prompt":"{{3}}房间里突然出现了",
+                    "suffix":"",
+                    "model":"text-davinci-003",
+                    "temperature":0.9,
+                    "max_tokens":128,
+                    "display":"{{reply}}脑海里那个声音又出现了，剩余回合数，2。看来我必须要在倒计时结束前离开这个房间。\n"
+                }
+            ]
+        },
+        {
+            "intro": [
+                {
+                    "display":"好吧，我只能"
+                }
+            ],
+            "interaction": {
+                "max_input":"30",
+                "hint":"请输入你的行动，任意，30字以内",
+                "prompt":"{{all}}{{input}}。",
+                "suffix": "房间一下亮起来，亮得令人晕眩。",
+                "model":"text-davinci-003",
+                "temperature":0.9,
+                "max_tokens":128,
+                "display":"{{reply}}房间一下亮如白昼！"
+            },
+            "outro": [
+                {
+                    "prompt":"{{all}}等眼睛适应后，我看到左边有一扇窗，右边有一扇门。",
+                    "suffix": "又是同一个声音：剩余回合数，1。只有一回合了。",
+                    "model":"text-davinci-003",
+                    "temperature":0.9,
+                    "max_tokens":128,
+                    "display":"{{reply}}又是同一个声音：剩余回合数，1。只有一回合了。"
+                }
+            ]
+        },
+        {
+            "intro": [
+                {
+                    "display":"来吧，让我最后尝试"
+                }
+            ],
+            "interaction": {
+                "max_input":"30",
+                "hint":"请输入你的行动，任意，30字以内",
+                "prompt":"{{all}}{{input}}。",
+                "model":"text-davinci-003",
+                "max_tokens":128,
+                "stop": "\n",
+                "display":"{{reply}}"
+            },
+            "outro": [
+                {
+                    "prompt":"{{all}}倒计时结束会发生什么呢？",
+                    "suffix": "我突然清醒了过来，原来这只是个密室游戏。",
+                    "model":"text-davinci-003",
+                    "temperature":0.9,
+                    "max_tokens":128,
+                    "display":"{{reply}}我突然清醒了过来，原来这只是个密室游戏。"
+                }
+            ]
+        }
+    ],
+    "ending": [
+        {
+            "display":"游戏结束"
+        }
+    ]
+}
