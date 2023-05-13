@@ -12,13 +12,15 @@ from .my_tools import *
 
 @app.route('/')
 def home():
-    return render_template("home.html", title = "Book Shelf")
+    return read()
 
 
 @app.route('/read')
 def read():
-    books = ["demo"]
-    return redirect('/read/' + choice(books))
+    books = os.listdir(os.path.join(app.config['APP_STATIC'], "plots"))
+    books = [b for b in books if b.endswith(".json")]
+    books = [b.replace(".json", "") for b in books]
+    return redirect("/read/" + (choice(books)))
 
 
 @app.route('/read/<this>', methods = ["GET"])
