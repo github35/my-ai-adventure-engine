@@ -1,3 +1,6 @@
 .env
 __pycache__/
 .vscode/
+
+static/screenplays/*
+!static/screenplays/demo.json
