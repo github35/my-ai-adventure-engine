@@ -1,0 +1,76 @@
+{
+    "language_code":"en",
+    "opening": [
+        {
+            "display":"You find yourself locked in a dimly lit room with no windows and only one heavy door."
+        },
+        {
+            "display":"You have no idea how you got there or who put you there, but you know you need to escape before something bad happens.\n"
+        }
+    ],
+    "steps": [
+        {
+            "intro": [
+                {
+                    "display":"As you look around the room, you notice a wooden table, a small rug, an old bookshelf with a few books on it. You decide to "
+                }
+            ],
+            "interaction": {
+                "max_input":"100",
+                "hint":"describe your action within 100 characters",
+                "model":"text-davinci-003",
+                "prompt":"{{all}}{{input}}.",
+                "suffix": "The item you find is a map.",
+                "max_tokens":257,
+                "temperature":1.5,
+                "stope":"\n",
+                "best_of":3,
+                "display":"{{reply}}The item you find is a map."
+            },
+            "outro": [
+                {
+                    "model":"text-davinci-003",
+                    "prompt":"{{all}} On the map, ",
+                    "max_tokens":512,
+                    "temperature":1.5,
+                    "stop":["."],
+                    "display":"On the map, {{reply}}.\n"
+                }
+            ]
+        },
+        {
+            "intro": [
+                {
+                    "display":"So you decide to "
+                }
+            ],
+            "interaction": {
+                "max_input":"100",
+                "hint":"describe your action within 100 characters",
+                "model":"text-davinci-003",
+                "prompt":"{{all}}{{input}}.",
+                "suffix": "Now you have the key to unlock the door and escape from the room.",
+                "max_tokens":257,
+                "temperature":1.5,
+                "best_of":3,
+                "display":"{{reply}}Now you have the key to unlock the door and escape from the room."
+            },
+            "outro": [
+                {
+                    "model":"text-davinci-003",
+                    "prompt":"{{all}}",
+                    "suffix": "You wonder what is outside the room.",
+                    "max_tokens":257,
+                    "temperature":1.5,
+                    "best_of":3,
+                    "display":"{{reply}}You wonder what is outside the room.\n"
+                }
+            ]
+        }
+    ],
+    "ending": [
+        {
+            "display":"But the demo ends here."
+        }
+    ]
+}

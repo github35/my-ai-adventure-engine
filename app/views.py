@@ -17,7 +17,7 @@ def home():
 
 @app.route('/read')
 def read():
-    books = os.listdir(os.path.join(app.config['APP_STATIC'], "plots"))
+    books = os.listdir(os.path.join(app.config['APP_STATIC'], "screenplays"))
     books = [b for b in books if b.endswith(".json")]
     books = [b.replace(".json", "") for b in books]
     return redirect("/read/" + (choice(books)))
@@ -42,15 +42,15 @@ def run_this(this):
 
 
 def general_main(this):
-    with open(os.path.join(app.config['APP_STATIC'], "plots", this + ".json"), encoding='utf-8') as fh:
-        session["plot"] = json.load(fh)
+    with open(os.path.join(app.config['APP_STATIC'], "screenplays", this + ".json"), encoding='utf-8') as fh:
+        session["screenplay"] = json.load(fh)
 
     session["texts"] = []
     session["displays"] = []
 
-    process_plain_settings(session["plot"]["opening"], "opening")
+    process_plain_settings(session["screenplay"]["opening"], "opening")
 
-    session["n_steps"] = len(session["plot"]["steps"])
+    session["n_steps"] = len(session["screenplay"]["steps"])
     session["progress"] = 0
     process_interactive_settings(session["progress"])
     
@@ -71,17 +71,18 @@ def general_action(the_input):
         process_interactive_settings(session["progress"])
     
     else:
-        process_plain_settings(session["plot"]["ending"], "ending")
+        process_plain_settings(session["screenplay"]["ending"], "ending")
 
-        display = "<p></p><p></p><div data-html2canvas-ignore='true'><button onclick='download(this);' style='margin-left: 0px;'>冒险存档</button><button onclick='location.reload();'>重新开始</button></div><p></p><p></p>"
+        display = "<p></p><p></p><div data-html2canvas-ignore='true'><button onclick='download(this);' style='margin-left: 0px;'>Save</button><button onclick='location.reload();'>Restart</button></div><p></p><p></p>"
         session["displays"].append({"type": "t", "id": "download", "text": new_line_convertor(display, "backend")})
+        # 冒险存档 重新开始
 
     return jsonify(interaction_reply)
 
 
 def process_plain_settings(block, id):
     for s in block:
-        if "prompt" in s:
+        if "model" in s:
             display = send_to_model(s)
         else:
             display = s["display"]
@@ -90,11 +91,15 @@ def process_plain_settings(block, id):
 
 
 def process_interactive_settings(progress):
-    process_plain_settings(session["plot"]["steps"][progress]["intro"], "step" + str(progress) + "_intro")
+    process_plain_settings(session["screenplay"]["steps"][progress]["intro"], "step" + str(progress) + "_intro")
 
-    s = session["plot"]["steps"][progress]["interaction"]
+    s = session["screenplay"]["steps"][progress]["interaction"]
     id = "step" + str(progress) + "_interaction_input"
-    nbsp = "".join(["啊" * int(s["max_input"])])
+    if (session["screenplay"]["language_code"] == "zh"):
+        nbsp = "".join(["啊" * int(s["max_input"])])
+    else:
+        nbsp = "".join(["啊" * round(int(s["max_input"]) / 2)])
+        # some tricks to mimic input underline formating
     max_input = s["max_input"]
 
     # display = f"<div class='editor underline_input' id='{id}_underline' style='widthpx;'>{nbsp}<button class='bi bi-joystick' id='{id}_submit' onclick='run();'></button></div>"
@@ -104,20 +109,17 @@ def process_interactive_settings(progress):
     display = f"<div class='editor' id='{id}' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' oninput='count_input(this, {max_input});' onblur='cut_input(this, {max_input});' onfocus='$(\"#current_state\").val(\"I\");' onfocusout='$(\"#current_state\").val(\"\");'></div>"
     session["displays"].append({"type": "t", "id": id + "_box", "text": new_line_convertor(display, "backend")})
 
-    display = "<span class='smaller'>" +s["hint"] + "</span>" + f"<span class='smaller' id='{id}_limit'> (0/{max_input}) </span><button id='{id}_submit' onclick='run();'>继续</button>"
-    # display = s["hint"] + f"<span class='smaller' id='{id}_limit'> (0/{max_input}) </span>"
+    display = "<span class='smaller'>" +s["hint"] + "</span>" + f"<span class='smaller' id='{id}_limit'> (0/{max_input}) </span><button id='{id}_submit' onclick='run();'>Continue</button>"
+    # 继续
     session["displays"].append({"type": "t", "id": id + "_hint", "text": new_line_convertor(display, "backend")})
-
-    # display = "<button id='{id}_submit' onclick='run();'>继续</button>"
-    # session["displays"].append({"type": "t", "id": id + "_result", "text": new_line_convertor(display, "backend")})
 
 
 def close_interactive_settings(progress, the_input):
     # new_line_convertor(str(request.form['input']), "frontend")
-    interaction_reply = send_to_model(session["plot"]["steps"][progress]["interaction"], the_input)
+    interaction_reply = send_to_model(session["screenplay"]["steps"][progress]["interaction"], the_input)
     session["texts"].append(interaction_reply)
 
-    process_plain_settings(session["plot"]["steps"][progress]["outro"], "step" + str(progress) + "_outro")
+    process_plain_settings(session["screenplay"]["steps"][progress]["outro"], "step" + str(progress) + "_outro")
 
     return interaction_reply
 
@@ -146,7 +148,7 @@ def send_to_model(settings, the_input=""):
 
     ps = {}
     ps["prompt"] = prompt
-    for p in ["suffix", "model", "max_tokens", "stop", "role", "temperature"]:
+    for p in ["model", "suffix", "max_tokens", "temperature", "stop", "best_of"]:
         if p in settings:
             ps[p] = settings[p]
     reply = get_reply(ps)
