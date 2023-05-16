@@ -5,4 +5,4 @@ __pycache__/
 app/static/screenplays/*
 !app/static/screenplays/demo.json
 
-localhost.py
+local_host.py
