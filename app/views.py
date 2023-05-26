@@ -48,7 +48,7 @@ def general_main(this):
     session["texts"] = []
     session["displays"] = []
 
-    process_plain_settings(session["screenplay"]["opening"], "opening")
+    process_plain_settings(session["screenplay"]["opening"], "opening", True)
 
     session["n_steps"] = len(session["screenplay"]["steps"])
     session["progress"] = 0
@@ -64,28 +64,30 @@ def general_next():
 
 
 def general_action(the_input):
-    interaction_reply = close_interactive_settings(session["progress"], the_input)
+    restate, interaction_reply = close_interactive_settings(session["progress"], the_input)
 
     session["progress"] += 1
     if session["progress"] < session["n_steps"]:
         process_interactive_settings(session["progress"])
     
     else:
-        process_plain_settings(session["screenplay"]["ending"], "ending")
+        process_plain_settings(session["screenplay"]["ending"], "ending", True)
 
         display = "<p></p><p></p><div data-html2canvas-ignore='true'><button onclick='download(this);' style='margin-left: 0px;'>Save</button><button onclick='location.reload();'>Restart</button></div><p></p><p></p>"
         session["displays"].append({"type": "t", "id": "download", "text": new_line_convertor(display, "backend")})
         # 冒险存档 重新开始
 
-    return jsonify(interaction_reply)
+    return jsonify({"restate":restate, "reply":interaction_reply})
 
 
-def process_plain_settings(block, id):
+def process_plain_settings(block, id, closed=False):
     for s in block:
-        if "model" in s:
+        if "prompt" in s:
             display = send_to_model(s)
         else:
             display = s["display"]
+        if closed:
+            display += "\n"
         session["texts"].append(display)
         session["displays"].append({"type": "t", "id": id, "text": new_line_convertor(display, "backend")})
 
@@ -102,53 +104,72 @@ def process_interactive_settings(progress):
         # some tricks to mimic input underline formating
     max_input = s["max_input"]
 
-    # display = f"<div class='editor underline_input' id='{id}_underline' style='widthpx;'>{nbsp}<button class='bi bi-joystick' id='{id}_submit' onclick='run();'></button></div>"
+    display = s["hint_0"]
+    session["displays"].append({"type": "t", "id": id + "_hint_0", "text": new_line_convertor(display, "backend")})
+
     display = f"<div class='editor underline_input' id='{id}_underline' style='width: ppxxpx;'>{nbsp}</div><div class='editor hidden_input' id='{id}_hidden' style='width: ppxxpx;'>{nbsp}</div>"
     session["displays"].append({"type": "n", "id": id + "_bg", "text": new_line_convertor(display, "backend")})
 
     display = f"<div class='editor' id='{id}' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' oninput='count_input(this, {max_input});' onblur='cut_input(this, {max_input});' onfocus='$(\"#current_state\").val(\"I\");' onfocusout='$(\"#current_state\").val(\"\");'></div>"
     session["displays"].append({"type": "t", "id": id + "_box", "text": new_line_convertor(display, "backend")})
 
-    display = "<span class='smaller'>" +s["hint"] + "</span>" + f"<span class='smaller' id='{id}_limit'> (0/{max_input}) </span><button id='{id}_submit' onclick='run();'>Continue</button>"
+    display = "<span class='smaller'>" +s["hint_1"] + "</span>" + f"<span class='smaller' id='{id}_limit'> (0/{max_input}) </span><button id='{id}_submit' onclick='run();'>Continue</button>"
     # 继续
-    session["displays"].append({"type": "t", "id": id + "_hint", "text": new_line_convertor(display, "backend")})
+    session["displays"].append({"type": "t", "id": id + "_hint_1", "text": new_line_convertor(display, "backend")})
 
 
 def close_interactive_settings(progress, the_input):
     # new_line_convertor(str(request.form['input']), "frontend")
     interaction_reply = send_to_model(session["screenplay"]["steps"][progress]["interaction"], the_input)
+    restate = session["texts"][-1]
     session["texts"].append(interaction_reply)
 
-    process_plain_settings(session["screenplay"]["steps"][progress]["outro"], "step" + str(progress) + "_outro")
+    process_plain_settings(session["screenplay"]["steps"][progress]["outro"], "step" + str(progress) + "_outro", True)
 
-    return interaction_reply
+    return restate, interaction_reply
 
 
 def send_to_model(settings, the_input=""):
+    while(len(the_input) > 0 and the_input[-1] in ['.', ',', '?', '!', '"', ':', ';', "'", '(', ')', '-', '。', '，', '？', '！', '“', '”', '：', '；', '‘', '’', '（', '）', '—']):
+        the_input = the_input[:-1]
+
     prompt = settings["prompt"].replace("{{input}}", the_input)
 
-    pattern = r"\{\{(all|\d+)\}\}"
+    pattern = r"\{\{((all)|(-?\d+))\}\}"
     attention = ""
     for i, match in enumerate(re.finditer(pattern, prompt)):
         if i == 0:
             attention = match.group(1)
         prompt = re.sub(pattern, '', prompt, count=1)
+    raw_prompt = prompt
+
+    if attention == "all":
+        prompt = "".join(session["texts"]) + raw_prompt
+    elif len(attention) > 0:
+        if int(attention) > 0:
+            prompt = "".join(session["texts"][-1 * min(len(session["texts"]), int(attention)):]) + raw_prompt
+        else:
+            prompt = "".join(session["texts"][:max(-len(session["texts"]), int(attention))]) + raw_prompt
 
     if len(the_input) > 0:
-        session["texts"].append(prompt)
-        if attention == "all":
-            prompt = "".join(session["texts"][:-1]) + prompt
-        elif len(attention) > 0:
-            prompt = "".join(session["texts"][-1 * min(len(session["texts"]), int(attention) + 1):-1]) + prompt
-    else:
-        if attention == "all":
-            prompt = "".join(session["texts"]) + prompt
-        elif len(attention) > 0:
-            prompt = "".join(session["texts"][-1 * min(len(session["texts"]), int(attention)):]) + prompt
+        session["texts"].append(raw_prompt)
+
+    # if len(the_input) > 0:
+    #     session["texts"].append(prompt)
+    #     if attention == "all":
+    #         prompt = "".join(session["texts"][:-1]) + prompt
+    #     elif len(attention) > 0:
+    #         prompt = "".join(session["texts"][-1 * min(len(session["texts"]), int(attention) + 1):-1]) + prompt
+    # else:
+    #     if attention == "all":
+    #         prompt = "".join(session["texts"]) + prompt
+    #     elif len(attention) > 0:
+    #         prompt = "".join(session["texts"][-1 * min(len(session["texts"]), int(attention)):]) + prompt
 
     ps = {}
     ps["prompt"] = prompt
-    for p in ["model", "suffix", "max_tokens", "temperature", "stop", "best_of"]:
+    ps["model"] = "text-davinci-003"
+    for p in ["suffix", "max_tokens", "temperature", "n", "stop", "best_of"]:
         if p in settings:
             ps[p] = settings[p]
     reply = get_reply(ps)
