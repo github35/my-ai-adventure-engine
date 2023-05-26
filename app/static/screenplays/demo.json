@@ -2,75 +2,45 @@
     "language_code":"en",
     "opening": [
         {
-            "display":"You find yourself locked in a dimly lit room with no windows and only one heavy door."
-        },
-        {
-            "display":"You have no idea how you got there or who put you there, but you know you need to escape before something bad happens.\n"
+            "display":"You find yourself stuck in a dimly lit room, with no memory of how you got there. But you know you have to escape before something bad happens."
         }
     ],
     "steps": [
         {
             "intro": [
                 {
-                    "display":"As you look around the room, you notice a wooden table, a small rug, an old bookshelf with a few books on it. You decide to "
+                    "display":"Looking around, you see a small rug and a bookshelf with a few books on it."
                 }
             ],
             "interaction": {
+                "hint_0":"You decide to...",
                 "max_input":"100",
-                "hint":"describe your action within 100 characters",
-                "model":"text-davinci-003",
-                "prompt":"{{all}}{{input}}.",
-                "suffix": "The item you find is a map.",
+                "hint_1":"describe your action within 100 characters",
+                "prompt":"{{-1}}You {{input}}. ",
+                "suffix": ", where you discover a hidden item.",
                 "max_tokens":257,
-                "temperature":1.5,
-                "stope":"\n",
-                "best_of":3,
-                "display":"{{reply}}The item you find is a map."
+                "temperature":1.3,
+                "n":3,
+                "display":"{{reply}}, where you discover a hidden item."
             },
             "outro": [
                 {
-                    "model":"text-davinci-003",
-                    "prompt":"{{all}} On the map, ",
-                    "max_tokens":512,
-                    "temperature":1.5,
-                    "stop":["."],
-                    "display":"On the map, {{reply}}.\n"
-                }
-            ]
-        },
-        {
-            "intro": [
-                {
-                    "display":"So you decide to "
-                }
-            ],
-            "interaction": {
-                "max_input":"100",
-                "hint":"describe your action within 100 characters",
-                "model":"text-davinci-003",
-                "prompt":"{{all}}{{input}}.",
-                "suffix": "Now you have the key to unlock the door and escape from the room.",
-                "max_tokens":257,
-                "temperature":1.5,
-                "best_of":3,
-                "display":"{{reply}}Now you have the key to unlock the door and escape from the room."
-            },
-            "outro": [
-                {
-                    "model":"text-davinci-003",
-                    "prompt":"{{all}}",
-                    "suffix": "You wonder what is outside the room.",
+                    "prompt":"{{all}} It is",
                     "max_tokens":257,
-                    "temperature":1.5,
+                    "temperature":1.7,
+                    "stop":".",
                     "best_of":3,
-                    "display":"{{reply}}You wonder what is outside the room.\n"
+                    "display":"It is{{reply}}."
                 }
             ]
         }
     ],
     "ending": [
         {
-            "display":"But the demo ends here."
+            "display":"You now have a good feeling about this."
+        },
+        {
+            "display":"However, the demo ends here, leaving the rest of your escape to your imagination."
         }
     ]
 }
