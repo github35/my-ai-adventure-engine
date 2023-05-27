@@ -147,9 +147,9 @@ def send_to_model(settings, the_input=""):
         prompt = "".join(session["texts"]) + raw_prompt
     elif len(attention) > 0:
         if int(attention) > 0:
-            prompt = "".join(session["texts"][-1 * min(len(session["texts"]), int(attention)):]) + raw_prompt
+            prompt = " ".join(session["texts"][-1 * min(len(session["texts"]), int(attention)):]) + raw_prompt
         else:
-            prompt = "".join(session["texts"][:max(-len(session["texts"]), int(attention))]) + raw_prompt
+            prompt = " ".join(session["texts"][:max(-len(session["texts"]), int(attention))]) + raw_prompt
 
     if len(the_input) > 0:
         session["texts"].append(raw_prompt)
