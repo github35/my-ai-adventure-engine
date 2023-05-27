@@ -16,7 +16,7 @@
                 "hint_0":"You decide to...",
                 "max_input":"100",
                 "hint_1":"describe your action within 100 characters",
-                "prompt":"{{-1}}You {{input}}. ",
+                "prompt":"{{all}} You {{input}}.",
                 "suffix": ", where you discover a hidden item.",
                 "max_tokens":257,
                 "temperature":1.3,

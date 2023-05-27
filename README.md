@@ -29,21 +29,60 @@ To get started with writing your own screenplay, follow the steps below:
 ## Screenplay Template Guidelines
 
 The screenplay template consists of 4 major parts in the JSON format. `/static/screenplays/demo.json` is a complete example. 
-The structure looks like this:
 ```json
 {
-    "language_code": "en",
-    "opening": [{display block}, ...],
-    "steps": [{step block}, ...],
-    "ending": [{display block}, ...]
+    "language_code":"en",
+    "opening": [
+        {
+            "display":"You find yourself stuck in a dimly lit room, with no memory of how you got there. But you know you have to escape before something bad happens."
+        }
+    ],
+    "steps": [
+        {
+            "intro": [
+                {
+                    "display":"Looking around, you see a small rug and a bookshelf with a few books on it."
+                }
+            ],
+            "interaction": {
+                "hint_0":"You decide to...",
+                "max_input":"100",
+                "hint_1":"describe your action within 100 characters",
+                "prompt":"{{all}} You {{input}}.",
+                "suffix": ", where you discover a hidden item.",
+                "max_tokens":257,
+                "temperature":1.3,
+                "n":3,
+                "display":"{{reply}}, where you discover a hidden item."
+            },
+            "outro": [
+                {
+                    "prompt":"{{all}} It is",
+                    "max_tokens":257,
+                    "temperature":1.7,
+                    "stop":".",
+                    "best_of":3,
+                    "display":"It is{{reply}}."
+                }
+            ]
+        }
+    ],
+    "ending": [
+        {
+            "display":"You now have a good feeling about this."
+        },
+        {
+            "display":"However, the demo ends here, leaving the rest of your escape to your imagination."
+        }
+    ]
 }
 ```
-
+There are 4 parts in the structure:
 1. **Language Code**: Set the two-letter language code of the major language used in your screenplay. For example, `"language_code": "en"` for English or `"language_code": "zh"` for Chinese. The language code is not fully utilized in this version. If you are unsure, you can simply set `"language_code": "en"`.
 
-2. **Opening**: This section consists of a list of display blocks to provide context and introduce your adventure. Although there is no player interaction, you can leverage AI writing to add uncertainty and surprise for each gameplay.
+2. **Opening**: This section consists of a list of **Display Block**s to provide context and introduce your adventure. Although there is no player interaction, you can leverage AI writing to add uncertainty and surprise for each gameplay.
 
-3. **Steps**: This section comprises a list of step blocks. Each step block represents a step in the adventure and includes interactions with the player. You can guide players and utilize AI writing to dynamically change the plot.
+3. **Steps**: This section comprises a list of **Step Block**s. Each step block represents a step in the adventure and includes interactions with the player. You can guide players and utilize AI writing to dynamically change the plot.
 
 4. **Ending**: This section is similar to the opening section but to provide the ending of your adventure.
 
@@ -63,7 +102,7 @@ In the `"prompt"` field, you have two options for providing context to the AI mo
 2. Use `{{n}}`: If `n >= 0`, it represents the recent n display blocks. If `n < 0`, it represents all contents except for the recent n display blocks.
 
 In the `"display"` field, you can use `{{reply}}` to represent the AI-generated writing within the `"display"` field. 
-Here's an example from demo.json:
+Here's an example from `demo.json`:
 ```json
 {
     "prompt":"{{all}} It is",
@@ -77,14 +116,7 @@ Here's an example from demo.json:
 
 **Step Block**
 The **Step Block** is used to define player interactions in your adventure. Its structure is as follows:
-The structure looks like this:
-```json
-{
-    "intro": [{display block}, ...],
-    "interaction": {interaction block},
-    "outro": [{display block}, ...]
-}
-```
+There are 3 parts in the structure:
 1. **Intro**: This is a list of display blocks that provide an introduction to the step. You can leave it as a blank list if there's no specific introduction needed.
 2. **Interaction**: This block represents a player interaction within the step. It contains the following required fields: `"hint_0"` (hint displayed above the input box), `"max_input"` (maximum number of characters allowed for input), `"hint_1"` (hint displayed below the input box), `"prompt"` and `"display"`. The other optional parameters are the same as the display block parameters used for AI interaction. Here's an example from demo.json:
 ```json
@@ -92,7 +124,7 @@ The structure looks like this:
     "hint_0":"You decide to...",
     "max_input":"100",
     "hint_1":"describe your action within 100 characters",
-    "prompt":"{{-1}}You {{input}}. ",
+    "prompt":"{{all}} You {{input}}.",
     "suffix": ", where you discover a hidden item.",
     "max_tokens":257,
     "temperature":1.3,
